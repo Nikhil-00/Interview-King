@@ -1,0 +1,160 @@
+import React, { useState } from 'react';
+import { FileUpload } from './FileUpload';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/components/ui/use-toast';
+import { uploadFiles } from '../services/api';
+
+interface AnalysisResult {
+  ats_score: number;
+  similarity_score: number;
+  strength: string;
+  area_of_improvement: string;
+  matching_qualifications: string;
+  skills_gap: string;
+  technical_questions: string;
+  behavioral_questions: string;
+  situation_questions: string;
+  leadership_questions: string;
+}
+
+export const ResumeAnalyzer: React.FC = () => {
+  const [resume, setResume] = useState<File | null>(null);
+  const [jobDescription, setJobDescription] = useState<File | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<AnalysisResult | null>(null);
+  const { toast } = useToast();
+
+  const handleAnalyze = async () => {
+    if (!resume || !jobDescription) {
+      toast({
+        title: "Missing Files",
+        description: "Please upload both resume and job description files.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await uploadFiles(resume, jobDescription);
+      console.log("API Response:", response);  // Debug log
+      setResult(response);
+      toast({
+        title: "Analysis Complete",
+        description: "Your resume has been analyzed successfully.",
+      });
+    } catch (error) {
+      console.error('Analysis error:', error);
+      toast({
+        title: "Analysis Failed",
+        description: error instanceof Error ? error.message : "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="w-full max-w-4xl mx-auto p-6 space-y-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <FileUpload
+          label="Upload Resume (PDF)"
+          accept=".pdf"
+          onFileSelect={setResume}
+          className="w-full"
+        />
+        <FileUpload
+          label="Upload Job Description (PDF)"
+          accept=".pdf"
+          onFileSelect={setJobDescription}
+          className="w-full"
+        />
+      </div>
+
+      <Button 
+        onClick={handleAnalyze} 
+        disabled={loading || !resume || !jobDescription}
+        className="w-full"
+      >
+        {loading ? "Analyzing..." : "Analyze Resume"}
+      </Button>
+
+      {result && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="p-6 rounded-lg border bg-gradient-card">
+              <h3 className="text-lg font-semibold mb-2">ATS Score</h3>
+              <div className="text-3xl font-bold text-primary">
+                {result.ats_score}%
+              </div>
+            </div>
+            <div className="p-6 rounded-lg border bg-gradient-card">
+              <h3 className="text-lg font-semibold mb-2">Similarity Score</h3>
+              <div className="text-3xl font-bold text-primary">
+                {result.similarity_score}%
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="p-6 rounded-lg border bg-gradient-card">
+              <h3 className="text-lg font-semibold mb-4">Strengths</h3>
+              <div className="prose prose-sm dark:prose-invert whitespace-pre-line">
+                {result.strength}
+              </div>
+            </div>
+            <div className="p-6 rounded-lg border bg-gradient-card">
+              <h3 className="text-lg font-semibold mb-4">Areas of Improvement</h3>
+              <div className="prose prose-sm dark:prose-invert whitespace-pre-line">
+                {result.area_of_improvement}
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="p-6 rounded-lg border bg-gradient-card">
+              <h3 className="text-lg font-semibold mb-4">Matching Qualifications</h3>
+              <div className="prose prose-sm dark:prose-invert whitespace-pre-line">
+                {result.matching_qualifications}
+              </div>
+            </div>
+            <div className="p-6 rounded-lg border bg-gradient-card">
+              <h3 className="text-lg font-semibold mb-4">Skills Gap</h3>
+              <div className="prose prose-sm dark:prose-invert whitespace-pre-line">
+                {result.skills_gap}
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            <div className="p-6 rounded-lg border bg-gradient-card">
+              <h3 className="text-lg font-semibold mb-4">Technical Questions</h3>
+              <div className="prose prose-sm dark:prose-invert whitespace-pre-line">
+                {result.technical_questions}
+              </div>
+            </div>
+            <div className="p-6 rounded-lg border bg-gradient-card">
+              <h3 className="text-lg font-semibold mb-4">Behavioral Questions</h3>
+              <div className="prose prose-sm dark:prose-invert whitespace-pre-line">
+                {result.behavioral_questions}
+              </div>
+            </div>
+            <div className="p-6 rounded-lg border bg-gradient-card">
+              <h3 className="text-lg font-semibold mb-4">Situation Questions</h3>
+              <div className="prose prose-sm dark:prose-invert whitespace-pre-line">
+                {result.situation_questions}
+              </div>
+            </div>
+            <div className="p-6 rounded-lg border bg-gradient-card">
+              <h3 className="text-lg font-semibold mb-4">Leadership Questions</h3>
+              <div className="prose prose-sm dark:prose-invert whitespace-pre-line">
+                {result.leadership_questions}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};

@@ -1,0 +1,41 @@
+services:
+  # Backend API Service
+  - type: web
+    name: interview-king-backend
+    runtime: python
+    env: python
+    rootDir: ./Backend
+    plan: free
+    buildCommand: pip install -r ../requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: GROQ_API_KEY
+        sync: false  # Will be set manually in Render dashboard
+      - key: ENVIRONMENT
+        value: production
+      - key: DEBUG
+        value: false
+      - key: CHROMA_DB_PATH
+        value: ./chroma_db
+      - key: UPLOAD_DIR
+        value: ./uploads
+      - key: ALLOWED_ORIGINS
+        value: https://interview-king-frontend.onrender.com,http://localhost:5173
+    healthCheckPath: /
+    
+  # Frontend Static Site
+  - type: static
+    name: interview-king-frontend
+    buildCommand: cd FRONTEND && npm install && npm run build
+    staticPublishPath: ./FRONTEND/dist
+    plan: free
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: interview-king-backend
+          property: host
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
