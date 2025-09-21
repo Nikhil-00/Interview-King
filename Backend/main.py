@@ -18,18 +18,16 @@ from dotenv import load_dotenv
 import os
 import shutil
 
-# Load environment variables from .env file
+
 load_dotenv()
 
 app = FastAPI()
 
-# Configure CORS for production
 allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:8080").split(",")
 if os.getenv("ENVIRONMENT") == "production":
     # In production, use specific origins
     allowed_origins = [origin.strip() for origin in allowed_origins if origin.strip()]
 else:
-    # In development, allow all localhost
     allowed_origins.extend(["*"])
 
 app.add_middleware(
